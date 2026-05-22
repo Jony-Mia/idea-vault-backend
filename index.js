@@ -25,8 +25,10 @@ try {
 
     console.log("Database Pinged successfully");
     const database = client.db("idea_vault");
-    
     const collection = database.collection("ideas");
+    
+    const userAccounts = client.db("idea-vault-accounts");
+    const userAccountsCollections= userAccounts.collection("user");
     app.get("/ideas", async (req,res)=>{
         const cursor = await collection.find().toArray();
         console.log(cursor);
@@ -41,6 +43,28 @@ try {
 
         // console.log(cursor);
         res.send(cursor) 
+    })
+    app.get("/userCreated/ideas", async (req,res)=>{
+        const users = userAccountsCollections.find();
+        const result = await users.toArray()
+        const result2 = result.map(items=>items.userIdea);
+        res.send(result2);
+    })
+    app.patch("/userCreated/:id", async (req,res)=>{
+        let body =  req.body;
+        let id = req.params.id;
+        const users = await userAccountsCollections.updateOne(
+           { _id: new ObjectId(id)},
+           { $push:{ userIdea: body }
+        })
+        // const getArray = await users.toArray();
+        // const result2 = result["userIdea"].push(body)
+        console.log(users);
+        
+        //  const result = await users.toArray()
+        //  const result2 = result.map(items=>items.userIdea);
+        
+        res.send(users);
     })
 } catch (error) {
     console.log(error);
