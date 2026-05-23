@@ -8,7 +8,7 @@ dns.setServers(["1.1.1.1", "8.8.8.8", "0.0.0.0"]);
 dotenv.config();
 const PORT = process.env.PORT;
 
-const client = new MongoClient("mongodb+srv://jony_mia:jony_mia_db@cluster0.faotqao.mongodb.net/?appName=Cluster0", {
+const client = new MongoClient(process.env.MONGODB_URI, {
     serverApi: {
         deprecationErrors: true,
         version: ServerApiVersion.v1,
@@ -17,22 +17,15 @@ const client = new MongoClient("mongodb+srv://jony_mia:jony_mia_db@cluster0.faot
 });
 
 
-app.get("/", (req, res) => {
-    res.send({
-        message: "You will get all data in ideas endpoint",
-        status: true
-    })
-});
-
 app.use(express.json())
 app.use(cors());
-app.use(cors({origin:"*"}));
+app.use(cors({ origin: "*" }));
 // app.use(express.urlencoded({ extended: true }));
 
 async function run() {
     try {
-        await client.connect();
-        await client.db("admin").command({ ping: 1 });
+        // await client.connect();
+        // await client.db("admin").command({ ping: 1 });
 
         console.log("Database Pinged successfully");
         const database = client.db("idea_vault");
@@ -51,27 +44,73 @@ async function run() {
             const cursor = await collection.findOne(filter);
             res.send(cursor);
         });
+        app.patch("/userNameUpdate/:id", async (req, res) => {
+            const id = await req.params.id;
+            const body = req.body;
 
-        app.get("/userCreated/ideas", async (req, res) => {
+            const userName = await userAccountsCollections.updateOne({
+                _id: new ObjectId(id)
+            }, {
+                $set: body
+            })
+            res.send(userName)
+        })
+
+        app.get("/userCreatedIdeas", async (req, res) => {
             const users = userAccountsCollections.find();
             const result = await users.toArray();
-            const result2 = result.map(items => items.userIdea);
-            res.send(result2);
+            const response = result.map(items => items.userIdea);
+            res.send(response);
         })
-        app.patch("/userCreated/:id", async (req, res) => {
-            let body = req.body;
+        app.get("/updateUserIdes", async (req, res) => {
+            const users = userAccountsCollections.find();
+            const result = await users.toArray();
+            const response = result.map(items => items.userIdea);
+            res.send(response);
+        })
+        app.patch("/updateUserIdes:id", async (req, res) => {
+            let body = req.body
             let id = req.params.id;
+            // let newBody = {id, body}
+            // let newId = new ObjectId()
+            // body.id=newId;
             const users = await userAccountsCollections.updateOne(
                 { _id: new ObjectId(id) },
                 {
-                    $push: { userIdea: body }
+                    $set:  body 
                 });
-
+            // console.log(newBody);
+            console.log(users);
+            console.log(body);
+            
             res.send(users);
+        });
+        app.patch("/deleteUserIdea/:id", async (req,res)=>{
+            const id = req.params.id;
+            const body = req.body;
+            const users = await userAccountsCollections.updateOne(
+                { id: new ObjectId(id) },
+                {
+                    $set: { "userIdea": [] }
+                });
+            console.log(id);
+            console.log(body);
+            res.send(users)
         })
+
+
     } catch (error) {
         console.log(error);
     }
 }
+
+
+
 run().catch(console.dir);
+app.get("/", (req, res) => {
+    res.send({
+        message: "You will get all data in ideas endpoint",
+        status: true
+    })
+});
 app.listen(PORT, () => console.log("Server running on Port: ", PORT, "http://localhost:" + PORT));
