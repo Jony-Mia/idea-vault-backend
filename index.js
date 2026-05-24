@@ -35,7 +35,7 @@ async function run() {
         const userAccountsCollections = userAccounts.collection("user");
 
         app.get("/ideas", async (req, res) => {
-            const cursor = await collection.find().toArray();
+            const cursor = await collection.find().toArray()
             res.send(cursor)
         })
         app.get("/ideas/:id", async (req, res) => {
@@ -59,17 +59,31 @@ async function run() {
             const {id,data} = req.body;
              data.ownerId= id;
             const newIdea = await collection.insertOne(data);
-            console.log(id, data);
+            // console.log(id, data);
             // console.log(req.body)
             res.send(newIdea)
             
         })
 
-        app.get("/userCreatedIdeas", async (req, res) => {
-            const users = userAccountsCollections.find();
+        app.get("/userCreatedIdeas/:id", async (req, res) => {
+            let userId = req.params.id
+            const users = collection.find({ownerId: userId});
+            
             const result = await users.toArray();
+                                        
             const response = result.map(items => items.userIdea);
-            res.send(response);
+            console.log( userId);
+            console.log(result);
+            
+            res.send(result);
+        })
+        app.get("/profileIdeas/:id", async (req, res) => {
+            let userId = req.params.id
+            const users = collection.find({ownerId: userId});
+
+            const result = await users.toArray();
+            
+            res.send(result);
         })
         app.get("/updateUserIdes", async (req, res) => {
             const users = userAccountsCollections.find();
@@ -77,13 +91,13 @@ async function run() {
             const response = result.map(items => items.userIdea);
             res.send(response);
         })
-        app.patch("/updateUserIdes:id", async (req, res) => {
+        app.patch("/updateUserIdes/:id", async (req, res) => {
             let body = req.body
             let id = req.params.id;
             // let newBody = {id, body}
             // let newId = new ObjectId()
             // body.id=newId;
-            const users = await userAccountsCollections.updateOne(
+            const users = await collection.updateOne(
                 { _id: new ObjectId(id) },
                 {
                     $set: body
@@ -94,16 +108,13 @@ async function run() {
 
             res.send(users);
         });
-        app.patch("/deleteUserIdea/:id", async (req, res) => {
-            const id = req.params.id;
-            const body = req.body;
-            const users = await userAccountsCollections.updateOne(
-                { id: new ObjectId(id) },
-                {
-                    $set: { "userIdea": [] }
-                });
+        app.delete("/deleteUserIdea/:id", async (req, res) => {
+            const id = new ObjectId( req.params.id);
+            const users = await collection.deleteOne(
+                { _id: id }
+                );
             console.log(id);
-            console.log(body);
+            // console.log(body);
             res.send(users)
         })
 
