@@ -55,6 +55,15 @@ async function run() {
             })
             res.send(userName)
         })
+        app.post("/userCreated",async(req,res)=>{
+            const {id,data} = req.body;
+             data.ownerId= id;
+            const newIdea = await collection.insertOne(data);
+            console.log(id, data);
+            // console.log(req.body)
+            res.send(newIdea)
+            
+        })
 
         app.get("/userCreatedIdeas", async (req, res) => {
             const users = userAccountsCollections.find();
@@ -77,15 +86,15 @@ async function run() {
             const users = await userAccountsCollections.updateOne(
                 { _id: new ObjectId(id) },
                 {
-                    $set:  body 
+                    $set: body
                 });
             // console.log(newBody);
             console.log(users);
             console.log(body);
-            
+
             res.send(users);
         });
-        app.patch("/deleteUserIdea/:id", async (req,res)=>{
+        app.patch("/deleteUserIdea/:id", async (req, res) => {
             const id = req.params.id;
             const body = req.body;
             const users = await userAccountsCollections.updateOne(
@@ -107,10 +116,5 @@ async function run() {
 
 
 run().catch(console.dir);
-app.get("/", (req, res) => {
-    res.send({
-        message: "You will get all data in ideas endpoint",
-        status: true
-    })
-});
+app.get("/", (req, res) => res.send({ message: "You will get all data in ideas endpoint", status: true }));
 app.listen(PORT, () => console.log("Server running on Port: ", PORT, "http://localhost:" + PORT));
