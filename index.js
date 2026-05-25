@@ -27,7 +27,6 @@ async function run() {
         // await client.connect();
         // await client.db("admin").command({ ping: 1 });
 
-        console.log("Database Pinged successfully");
         const database = client.db("idea_vault");
         const collection = database.collection("ideas");
 
@@ -64,7 +63,6 @@ async function run() {
             res.send(newIdea)
             
         })
-
         app.get("/userCreatedIdeas/:id", async (req, res) => {
             let userId = req.params.id
             const users = collection.find({ownerId: userId});
@@ -117,6 +115,7 @@ async function run() {
             // console.log(body);
             res.send(users)
         })
+        console.log("Database Pinged successfully");
 
 
     } catch (error) {
